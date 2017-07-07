@@ -193,14 +193,11 @@ def call_genotype_freebayes(strain_bam_paths, genome_fasta_path, num_cpu, out_di
     
     regions.append(region_fmt % (chromo, i, size))
   
-  print regions 
-  
   # Call haplotype for all strains at once, split into parallel regions
   
   common_args = [genome_fasta_path, bam_file_paths]
   region_vcf_paths = util.parallel_split_job(freebayes_genotype_job, regions, common_args,
                                              num_cpu, collect_output=True)
-  
   
   # Combine the regions which were run in parallel
   
@@ -224,11 +221,10 @@ def call_genotype_freebayes(strain_bam_paths, genome_fasta_path, num_cpu, out_di
   
   # Cleanup temp files
   
-  #os.unlink(temp_file_path_a)
-  #os.unlink(temp_file_path_b)
+  os.unlink(temp_file_path_a)
 
-  #for file_path in region_vcf_paths:
-  #  os.unlink(file_path)
+  for file_path in region_vcf_paths:
+    os.unlink(file_path)
  
   return merge_file_path
 

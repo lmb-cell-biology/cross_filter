@@ -61,10 +61,12 @@ def makedirs(dir_path, exist_ok=False):
       
 
 def report(msg):
- 
+
+  global LOG_FILE_OBJ
+  
   if LOGGING:
     if not LOG_FILE_OBJ:
-      LOG_FILE_OBJ = open(LOG_FILE_PATH, 'w')
+      LOG_FILE_OBJ = open(LOG_FILE_PATH, 'a')
       
     LOG_FILE_OBJ.write(msg)
   

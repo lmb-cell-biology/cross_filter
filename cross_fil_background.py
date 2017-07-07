@@ -94,7 +94,7 @@ if __name__ == '__main__':
                          help='Input file paths of extracted strain VCF files as created by cross_fil_genotype (may contain wildcards) ') 
 
   arg_parse.add_argument('-o', metavar='VCF_FILE', default=None,
-                         help='Optional output path for combined backgrouund VCF file. Default is "background_s{NUM_STRAINS}_m{MIN_VAR_COUNT}.vcf" in the current working directory') 
+                         help='Optional output path for combined backgrouund VCF file. Default is "bg_s{NUM_STRAINS}_m{MIN_VAR_COUNT}.vcf" in the current working directory') 
 
   arg_parse.add_argument('-m', metavar='MIN_VAR_COUNT', default=DEFAULT_MIN_NUM_OBS, type=int,
                          help='Minimum number of variant occurrences (in input strains) required for acceptance into background file. Default: %d' % DEFAULT_MIN_NUM_OBS) 
