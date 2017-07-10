@@ -231,7 +231,9 @@ def call_genotype_freebayes(strain_bam_paths, genome_fasta_path, num_cpu, out_di
 
 def cross_fil_genotype(bam_file_paths, genome_fasta_path, var_caller=CALLER_FREEBAYES,
                        num_cpu=util.MAX_CORES, out_dir=None, sub_dir_name=None):
-
+  
+  import subprocess
+  
   # Main function to call genotypes given (cleaned) input BAM files with the option of different caller programs
   # Requires filtered, duplicate marked BAM file for each sample/strain
   if not sub_dir_name:
@@ -247,7 +249,7 @@ def cross_fil_genotype(bam_file_paths, genome_fasta_path, var_caller=CALLER_FREE
       util.critical(msg)
   
   strain_bam_paths = {}
-  for bam_file_path in bam_file_paths:
+  for bam_file_path in sorted(bam_file_paths):
     file_name = os.path.basename(bam_file_path)
     
     if util.FILE_TAG not in file_name:
@@ -256,6 +258,39 @@ def cross_fil_genotype(bam_file_paths, genome_fasta_path, var_caller=CALLER_FREE
         
     sample_name = file_name.split(util.FILE_TAG)[0]
     strain_bam_paths[sample_name] = bam_file_path
+    
+    # Set the BAM read group (RG) IDs so that they are unique
+    
+    cmd_args = ['samtools', 'view', '-H', bam_file_path]
+  
+    proc = subprocess.Popen(cmd_args, shell=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+                          
+    std_out_data, std_err_data = proc.communicate()  
+    
+    for line in std_out_data.decode('ascii').split('\n'):
+      if line[:3] == '@RG':
+        rg_vals = dict([x.split(':') for x in line.strip().split('\t')[1:]])
+        break
+    
+    if 'sample_' not in rg_vals['ID']:
+      new_id = rg_vals['SM']
+      new_rg_line = '"@RG\tID:%s\tSM:%s\tPL:%s\tLB:%s\tPU:%s"' % (new_id, rg_vals['SM'], rg_vals['PL'], rg_vals['LB'], rg_vals['PU'])
+      
+      util.info('Renaming header RG ID in BAM file %s' % bam_file_path)
+      
+      temp_path = util.get_temp_path(bam_file_path)
+      cmd_args = ['samtools', 'addreplacerg', '-r', new_rg_line, '-o', temp_path, bam_file_path]
+      
+      util.call(cmd_args)
+      
+      #os.rename(temp_path, temp_path)
+    
+    
+  return 
+    
+    
 
   strain_names = list(strain_bam_paths.keys())
   num_strains = len(strain_names)  
