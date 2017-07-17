@@ -31,7 +31,7 @@ def genome_map(aligner, strain_name, strain_num, fastq_paths, genome_index_path,
     util.info("Running aligner %s on %s..." % (aligner, strain_name))
  
     if aligner == ALIGNER_BWA:
-      rg_header = "@RG\tID:group%d\tSM:sample_%s\tPL:illumina\tLB:lib%d\tPU:unit%d" % (strain_num, strain_name, strain_num, strain_num)
+      rg_header = "@RG\tID:%s\tSM:sample_%s\tPL:illumina\tLB:lib%d\tPU:unit%d" % (strain_name, strain_name, strain_num, strain_num)
       cmd_args = [util.EXE[ALIGNER_BWA], 'mem',
                   '-t', num_cpu,
                   '-M',
@@ -44,7 +44,7 @@ def genome_map(aligner, strain_name, strain_num, fastq_paths, genome_index_path,
                   '-x', genome_index_path,
                   '-p', str(num_cpu),
                   '-q', # FASTQ input
-                  '--rg-id', 'group%d' % strain_num,
+                  '--rg-id', strain_name,
                   '--rg', "SM:sample_%s\tPL:illumina\tLB:lib%d\tPU:unit%d" % (strain_name, strain_num, strain_num),
                   '-S', sam_file_path]
       
@@ -62,7 +62,7 @@ def genome_map(aligner, strain_name, strain_num, fastq_paths, genome_index_path,
                   'in=%s' % fastq_paths[0],
                   'out=%s' % sam_file_path,
                   't=%d' % num_cpu,
-                  'rgid=group%d' % strain_num, 
+                  'rgid=%s' % strain_name, 
                   'rgsm=sample_%s' % strain_name,
                   'rgpl=illumina', 
                   'rglb=lib%d' % strain_num, 
