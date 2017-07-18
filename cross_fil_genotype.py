@@ -152,6 +152,8 @@ def freebayes_genotype_job(region, genome_fasta_path, bam_paths):
   if not os.path.exists(out_vcf_path):
  
     cmd_args = [util.EXE['freebayes'],
+                '--no-mnps', # make this optional
+                '--no-complex', # make this optional
                 '-f', genome_fasta_path,
                 '-r', region,
                 '-v', out_vcf_path] #, '--ploidy', '2']
