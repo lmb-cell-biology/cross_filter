@@ -201,9 +201,14 @@ def get_safe_file_path(path_name, file_name=None):
  
   if os.path.exists(file_path):
     warn("%s already exists and won't be overwritten..." % file_path)
-    
     path_root, file_ext = os.path.splitext(file_path)
-    file_path = '%s_%s%s' % (path_root, get_rand_string(8), file_ext)
+    
+    i = 0
+    while os.path.exists(file_path):
+      i += 1
+      file_path = '%s_v%d%s' % (path_root, i, file_ext)
+      
+      # Moved away from using get_rand_string(8) to better track versions
     
     info('Results will be saved in %s' % file_path)
   
