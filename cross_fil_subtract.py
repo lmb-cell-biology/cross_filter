@@ -10,7 +10,7 @@ DEFAULT_INTERVAL_LENGTH = 2000
 DEFAULT_GENOME_VERSION = 'WBcel235.86'
 
 def subtract_background(strain_vcf_path, background_vcf_path, genome_fasta_path,
-                        genome_version, interval_length, output_tag):
+                        out_dir, genome_version, interval_length, output_tag):
   
   bg_path_root, bg_file_ext = os.path.splitext(background_vcf_path)
   bg_file_root = os.path.basename(bg_path_root)
@@ -18,9 +18,17 @@ def subtract_background(strain_vcf_path, background_vcf_path, genome_fasta_path,
   util.info('Filtering VCF file %s' % strain_vcf_path)
   
   path_root, file_ext = os.path.splitext(strain_vcf_path)
+  
+  if out_dir:
+    file_root = os.path.basename(path_root)
+    path_root = os.path.join(out_dir, file_root)
+  
   path_root = '%s%s%s' % (path_root, output_tag, bg_file_root) # Combines background name and sample/strain name
   
-  out_vcf_path     = path_root + '.vcf'
+  out_vcf_path = path_root + '.vcf'
+  out_vcf_path = util.get_safe_file_path(out_vcf_path) # Avoid overwrites
+  path_root, file_ext = os.path.splitext(out_vcf_path) # Path root chould have changed if a substitute name was used
+  
   snpeff_vcf_path  = path_root + '_SnpEff.vcf'
   snpeff_summ_path = path_root + '_summary.html'
   snpsift_tab_path = path_root + '_SnpSift.tabular'
@@ -62,17 +70,17 @@ def subtract_background(strain_vcf_path, background_vcf_path, genome_fasta_path,
                            'ANN[*].CDS_POS', 'ANN[*].CDS_LEN']
 
   util.call(cmd_args, stdout=snpsift_tab_path)
+  
+  util.info('Results saved to %s and similarly named analysis files' % out_vcf_path)
 
 
-def cross_fil_subtract(strain_vcf_paths, background_vcf_path, genome_fasta_path, genome_version,
+def cross_fil_subtract(strain_vcf_paths, background_vcf_path, genome_fasta_path, genome_version, out_dir=None,
                        num_cpu=util.MAX_CORES, interval_length=DEFAULT_INTERVAL_LENGTH, output_tag=OUTPUT_TAG):
   
   # Accepts multiple inputs, which can all be done in parallel
   # This function is just a parallelisation wrapper for subtract_background()
   
-  common_args = [background_vcf_path, genome_fasta_path, genome_version, interval_length, output_tag]  
-  
-  print strain_vcf_paths, common_args, num_cpu
+  common_args = [background_vcf_path, genome_fasta_path, genome_version, out_dir, interval_length, output_tag]
 
   util.parallel_split_job(subtract_background, strain_vcf_paths, common_args, num_cpu)
 
@@ -85,8 +93,9 @@ if __name__ == '__main__':
    
   epilog = 'For further help on running this program please email tjs23@cam.ac.uk.\n\n'
   epilog += 'Example use:\n\n'
-  epilog += 'python3 cross_fil_subtract.py /data/SLX-12506/trimmed/strain/*_extracted.vcf '
-  epilog += '/data/SLX-12506/trimmed/strain/background_1.vcf '
+  epilog += 'python3 cross_fil_subtract.py /data/*_extracted.vcf '
+  epilog += '/home/username/background_1.vcf /data/genome_builds/c_elegans.PRJNA13758.WS259.genomic.fa'
+  epilog += '-o /home/username/results/'
   
   arg_parse = ArgumentParser(prog=PROG_NAME, description=DESCRIPTION,
                              epilog=epilog, prefix_chars='-', add_help=True)
@@ -100,8 +109,11 @@ if __name__ == '__main__':
   arg_parse.add_argument('genome_fasta', metavar='GENOME_FASTA',
                          help='File path of genome sequence FASTA file') 
 
+  arg_parse.add_argument('-o', metavar='OUT_DIR',
+                         help='Optional output directory for filtered VCF and analysis files') 
+
   arg_parse.add_argument('-gv', metavar='GENOME_VERSION', default=DEFAULT_GENOME_VERSION,
-                         help='Genome version name from snpEff database. Default: %s' % DEFAULT_GENOME_VERSION) 
+                         help='Genome version name from SnpEff database. Default: %s' % DEFAULT_GENOME_VERSION) 
 
   arg_parse.add_argument('-ivl', metavar='INTERVAL_LENGTH', default=DEFAULT_INTERVAL_LENGTH, type=int,
                          help='Upstream/downstream interval length as used by SnpEff. Default: %d' % DEFAULT_INTERVAL_LENGTH) 
@@ -123,9 +135,10 @@ if __name__ == '__main__':
   genome_version = args['gv']
   num_cpu        = args['cpu'] or None # May not be zero
   ivl_length     = args['ivl']
+  out_dir        = args['o']
 
   # Reporting handled by cross_fil_util
   util.QUIET   = args['q']
   util.LOGGING = args['log']  
   
-  cross_fil_subtract(vcf_paths, bg_vcf_path, genome_fasta, genome_version, num_cpu, ivl_length)
+  cross_fil_subtract(vcf_paths, bg_vcf_path, genome_fasta, out_dir, genome_version, num_cpu, ivl_length)
