@@ -33,7 +33,7 @@ def genome_map(aligner, strain_name, strain_num, fastq_paths, genome_index_path,
     if aligner == ALIGNER_BWA:
       rg_header = "@RG\tID:%s\tSM:sample_%s\tPL:illumina\tLB:lib%d\tPU:unit%d" % (strain_name, strain_name, strain_num, strain_num)
       cmd_args = [util.EXE[ALIGNER_BWA], 'mem',
-                  '-t', num_cpu,
+                  '-t', str(num_cpu),
                   '-M',
                   '-R', rg_header,
                   genome_index_path] + list(fastq_paths)

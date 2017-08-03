@@ -84,8 +84,7 @@ if __name__ == '__main__':
   epilog = 'For further help on running this program please email tjs23@cam.ac.uk.\n\n'
   epilog += 'Example use:\n\n'
   epilog += 'python3 cross_fil_background.py /data/SLX-12506/trimmed/strain/*_extracted.vcf '
-  epilog += '/data/SLX-12506/trimmed/strain/background_1.vcf'
-  epilog += ' -m 3'
+  epilog += '-o /data/SLX-12506/trimmed/strain/background_1.vcf -m 3'
   
   arg_parse = ArgumentParser(prog=PROG_NAME, description=DESCRIPTION,
                              epilog=epilog, prefix_chars='-', add_help=True)
