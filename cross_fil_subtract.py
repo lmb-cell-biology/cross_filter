@@ -33,13 +33,13 @@ def subtract_background(strain_vcf_path, background_vcf_path, genome_fasta_path,
   snpeff_summ_path = path_root + '_summary.html'
   snpsift_tab_path = path_root + '_SnpSift.tabular'
 
-  cmd_args = util.JAVA + ['-jar', util.EXE['gatk'],
-                          '-T', 'SelectVariants',
-                          '-R', genome_fasta_path,
-                          '-V', strain_vcf_path,
-                          '--discordance', background_vcf_path,
-                          '-o', out_vcf_path,
-                          ]
+  cmd_args = list(util.JAVA) + ['-jar', util.EXE['gatk'],
+                                '-T', 'SelectVariants',
+                                '-R', genome_fasta_path,
+                                '-V', strain_vcf_path,
+                                '--discordance', background_vcf_path,
+                                '-o', out_vcf_path,
+                                ]
 
   util.call(cmd_args)
  
@@ -47,11 +47,11 @@ def subtract_background(strain_vcf_path, background_vcf_path, genome_fasta_path,
 
   # Run SnpEff on resulting VCF file
 
-  cmd_args = util.JAVA + ['-jar', util.EXE['snpeff'], '-v',
-                          '-upDownStreamLen', str(interval_length),
-                          '-stats', snpeff_summ_path,
-                          genome_version,
-                          out_vcf_path]
+  cmd_args = list(util.JAVA) + ['-jar', util.EXE['snpeff'], '-v',
+                                '-upDownStreamLen', str(interval_length),
+                                '-stats', snpeff_summ_path,
+                                genome_version,
+                                out_vcf_path]
 
   util.call(cmd_args, stdout=snpeff_vcf_path)
 
@@ -59,15 +59,15 @@ def subtract_background(strain_vcf_path, background_vcf_path, genome_fasta_path,
  
   util.info('Running SnpSift on %s' % snpeff_vcf_path)
 
-  cmd_args =  util.JAVA + ['-jar', util.EXE['snpsift'],
-                           'extractFields', snpeff_vcf_path,
-                           '-s', ',',
-                           '-e', '.',
-                           'CHROM', 'POS', 'REF', 'ALT', 'QUAL', 'DP',
-                           'ANN[*].ERRORS',  'ANN[*].GENEID', 'ANN[*].GENE',
-                           'ANN[*].BIOTYPE', 'ANN[*].TRID',   'ANN[*].RANK',
-                           'ANN[*].EFFECT',  'ANN[*].HGVS_P', 'ANN[*].HGVS_C',
-                           'ANN[*].CDS_POS', 'ANN[*].CDS_LEN']
+  cmd_args =  list(util.JAVA) + ['-jar', util.EXE['snpsift'],
+                                 'extractFields', snpeff_vcf_path,
+                                 '-s', ',',
+                                 '-e', '.',
+                                 'CHROM', 'POS', 'REF', 'ALT', 'QUAL', 'DP',
+                                 'ANN[*].ERRORS',  'ANN[*].GENEID', 'ANN[*].GENE',
+                                 'ANN[*].BIOTYPE', 'ANN[*].TRID',   'ANN[*].RANK',
+                                 'ANN[*].EFFECT',  'ANN[*].HGVS_P', 'ANN[*].HGVS_C',
+                                 'ANN[*].CDS_POS', 'ANN[*].CDS_LEN']
 
   util.call(cmd_args, stdout=snpsift_tab_path)
   

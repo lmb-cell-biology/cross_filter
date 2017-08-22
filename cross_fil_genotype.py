@@ -29,14 +29,14 @@ def gatk_haplotype_job(bam_file_path, genome_fasta_path, sub_dir_name):
   
   util.info('Creating GVCF file for %s using GATK' % file_root)
 
-  cmd_args = util.JAVA + ['-jar', util.EXE[CALLER_GATK],
-                          '-T', 'HaplotypeCaller',
-                          '-R', genome_fasta_path,
-                          '-I', bam_file_path,
-                          '-o', vcf_file_path,
-                          '-ERC', 'GVCF',
-                          '-variant_index_type', 'LINEAR',
-                          '-variant_index_parameter', '128000']
+  cmd_args = list(util.JAVA) + ['-jar', util.EXE[CALLER_GATK],
+                                '-T', 'HaplotypeCaller',
+                                '-R', genome_fasta_path,
+                                '-I', bam_file_path,
+                                '-o', vcf_file_path,
+                                '-ERC', 'GVCF',
+                                '-variant_index_type', 'LINEAR',
+                                '-variant_index_parameter', '128000']
   util.call(cmd_args)
   
   return vcf_file_path
@@ -79,11 +79,11 @@ def gatk_merge_vcfs(dir_name, strain_vcf_paths, genome_fasta_path, num_cpu=util.
 
   merge_file_path = _get_merged_vcf_path(dir_name, strain_vcf_paths.keys(), CALLER_GATK)
 
-  cmd_args = util.JAVA + ['-jar', util.EXE[CALLER_GATK],
-                          '-T', 'GenotypeGVCFs',
-                          '-R', genome_fasta_path,
-                          #'-nt', str(min(8, num_cpu)), # Seems to fail with multiple CPU threads...
-                          '-o', merge_file_path]
+  cmd_args = list(util.JAVA) + ['-jar', util.EXE[CALLER_GATK],
+                                '-T', 'GenotypeGVCFs',
+                                '-R', genome_fasta_path,
+                                #'-nt', str(min(8, num_cpu)), # Seems to fail with multiple CPU threads...
+                                '-o', merge_file_path]
 
   for strain in strain_vcf_paths:
     cmd_args += ['-V', strain_vcf_paths[strain]]
@@ -102,13 +102,13 @@ def gatk_select_homozygous_vars(strain_name, merged_vcf_path, genome_fasta_path,
  
   util.info('Creating VCF file for %s' % strain_name)
 
-  cmd_args = util.JAVA + ['-jar', util.EXE[CALLER_GATK],
-                          '-T', 'SelectVariants',
-                          '-R', genome_fasta_path,
-                          '-V', merged_vcf_path,
-                          '-o', out_vcf_path,
-                          '-sn', 'sample_%s' % strain_name,
-                          '-select', "vc.getGenotype('sample_%s').isHomVar()" % strain_name] # Check quotes
+  cmd_args = list(util.JAVA) + ['-jar', util.EXE[CALLER_GATK],
+                               '-T', 'SelectVariants',
+                               '-R', genome_fasta_path,
+                               '-V', merged_vcf_path,
+                               '-o', out_vcf_path,
+                               '-sn', 'sample_%s' % strain_name,
+                               '-select', "vc.getGenotype('sample_%s').isHomVar()" % strain_name] # Check quotes
 
   util.call(cmd_args)
   util.info('All done for strain %s. VCF file can be found in %s' % (strain_name, out_vcf_path))
