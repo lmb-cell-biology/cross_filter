@@ -31,7 +31,7 @@ def genome_map(aligner, strain_name, strain_num, fastq_paths, genome_index_path,
     util.info("Running aligner %s on %s..." % (aligner, strain_name))
  
     if aligner == ALIGNER_BWA:
-      rg_header = "@RG\tID:%s\tSM:sample_%s\tPL:illumina\tLB:lib%d\tPU:unit%d" % (strain_name, strain_name, strain_num, strain_num)
+      rg_header = "@RG\\tID:%s\\tSM:sample_%s\\tPL:illumina\\tLB:lib%d\\tPU:unit%d" % (strain_name, strain_name, strain_num, strain_num)
       cmd_args = [util.EXE[ALIGNER_BWA], 'mem',
                   '-t', str(num_cpu),
                   '-M',
@@ -98,7 +98,7 @@ def sam_cleanup(sam_file_path, num_cpu=2):
   
   cmd_args = [util.EXE['samtools'], 'sort',
               '-O', 'bam',
-              '-@', str(num_cpu),
+ #             '-@', str(num_cpu),
               '-o', bam_file_path,
               sam_file_path]
               

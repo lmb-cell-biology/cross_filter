@@ -60,20 +60,27 @@ def makedirs(dir_path, exist_ok=False):
       os.makedirs(dir_path)
       
 
-def report(msg):
-
+def logging(msg=None):
+  
   global LOG_FILE_OBJ
   
   if LOGGING:
     if not LOG_FILE_OBJ:
       LOG_FILE_OBJ = open(LOG_FILE_PATH, 'a')
       
-    LOG_FILE_OBJ.write(msg)
+    if not msg==None:
+      LOG_FILE_OBJ.write(msg + '\n')
+  
+
+
+def report(msg):
+  
+  logging(msg)
   
   if not QUIET:
     print(msg)
 
-  
+
 def get_file_ext(file_path):
   
   file_root, file_ext = os.path.splitext(file_path)
@@ -82,7 +89,7 @@ def get_file_ext(file_path):
     file_root, file_ext = os.path.splitext(file_root)
    
   return file_ext
-   
+  
 
 def warn(msg, prefix='WARNING'):
 
@@ -143,6 +150,10 @@ def call(cmd_args, stdin=None, stdout=None, stderr=None, verbose=True, wait=True
 
   if stderr and isinstance(stderr, str):
     stderr = open(stderr, 'a')
+  
+  if stderr is None and LOGGING:
+    logging()
+    stderr = LOG_FILE_OBJ
   
   if wait:
     subprocess.call(cmd_args, stdin=stdin, stdout=stdout, stderr=stderr, env=env)
