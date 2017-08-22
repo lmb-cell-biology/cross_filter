@@ -114,7 +114,7 @@ def sam_cleanup(sam_file_path, num_cpu=2):
   cwd = os.getcwd()
   os.chdir('/') # Picard picky about relative paths
  
-  cmd_args = util.JAVA
+  cmd_args = list(util.JAVA)
   cmd_args += ['-jar', util.EXE['picard'],
                'MarkDuplicatesWithMateCigar',
                'I=%s' % clean_bam_path,

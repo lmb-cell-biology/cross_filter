@@ -14,7 +14,7 @@ LOGGING = False
 
 FILE_TAG = '_cf_' # This tag is used for formatting file names so they can be passed between the various cross_fil programs 
 
-JAVA = ['java', '-d64', '-Xmx4g'] # 4 gigabyte heap size, for GATK, Picard etc.
+JAVA = ('java', '-d64', '-Xmx4g') # 4 gigabyte heap size, for GATK, Picard etc.
 
 TEMP_ID = '%s' % uuid.uuid4()
 LOG_FILE_PATH = 'cf-out-%s.log' % TEMP_ID
