@@ -68,10 +68,9 @@ def logging(msg=None):
     if not LOG_FILE_OBJ:
       LOG_FILE_OBJ = open(LOG_FILE_PATH, 'a')
       
-    if not msg==None:
+    if msg is not None:
       LOG_FILE_OBJ.write(msg + '\n')
-  
-
+      LOG_FILE_OBJ.flush()
 
 def report(msg):
   
