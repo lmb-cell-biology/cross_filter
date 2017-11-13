@@ -202,8 +202,14 @@ def cross_fil_map(barcode_csv, genome_fasta_path, exon_gff_path, fastq_paths_r1,
   
   if not sub_dir_name:
     sub_dir_name = 'strain_%s' % aligner
+
+  if fastq_paths_r2:
+    fastq_paths_r2_list = fastq_paths_r2
+  else:
+    fastq_paths_r2_list = []
   
-  for file_path in [barcode_csv, genome_fasta_path, exon_gff_path] + fastq_paths_r1 + fastq_paths_r2 or []:
+  #for file_path in [barcode_csv, genome_fasta_path, exon_gff_path] + fastq_paths_r1 + fastq_paths_r2 or []:
+  for file_path in [barcode_csv] + fastq_paths_r1 + fastq_paths_r2_list or []:
     is_ok, msg = util.check_regular_file(file_path)
   
     if not is_ok:
@@ -402,7 +408,7 @@ if __name__ == '__main__':
       aligner = ALIGNER_BWA
   
   if len(pair_tags) != 2:
-    util.critical('When specified, exectly two paired-end filename tags bust be given.')
+    util.critical('When specified, exactly two paired-end filename tags must be given.')
   
   if is_single_end:
     fastq_paths_r1 = fastq_paths
