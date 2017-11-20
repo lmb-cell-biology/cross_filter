@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import os
+sys.path.append('./cell_bio_util')
 import cross_fil_util as util
 
 PROG_NAME   = 'cross_fil_subtract'

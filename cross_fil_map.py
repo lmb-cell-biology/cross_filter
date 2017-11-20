@@ -4,7 +4,7 @@ import csv
 import os
 import shutil
 import uuid
-
+sys.path.append('./cell_bio_util')
 import cross_fil_util as util
 
 PROG_NAME   = 'cross_fil_map'
