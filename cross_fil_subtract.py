@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 import os
-sys.path.append('./cell_bio_util')
+current_path = os.path.realpath(__file__)
+current_path = os.path.dirname(current_path) + '/cell_bio_util'
 import cross_fil_util as util
 
 PROG_NAME   = 'cross_fil_subtract'
@@ -28,7 +29,7 @@ def subtract_background(strain_vcf_path, background_vcf_path, genome_fasta_path,
   
   out_vcf_path = path_root + '.vcf'
   out_vcf_path = util.get_safe_file_path(out_vcf_path) # Avoid overwrites
-  path_root, file_ext = os.path.splitext(out_vcf_path) # Path root chould have changed if a substitute name was used
+  path_root, file_ext = os.path.splitext(out_vcf_path) # Path root should have changed if a substitute name was used
   
   snpeff_vcf_path  = path_root + '_SnpEff.vcf'
   snpeff_summ_path = path_root + '_summary.html'
