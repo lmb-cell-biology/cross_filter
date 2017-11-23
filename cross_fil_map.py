@@ -8,10 +8,12 @@ current_path = os.path.realpath(__file__)
 current_path = os.path.dirname(current_path) + '/cell_bio_util'
 import cross_fil_util as util
 
-PROG_NAME   = 'cross_fil_map'
-DESCRIPTION = 'CrossFil Python script to map FASTQ files then sort, quality filter and mark duplicate BAM output'
-PICARD_TAG  = 'mdwm'
-CLEAN_TAG   = 'f3_F4_q1'
+PROG_NAME     = 'cross_fil_map'
+DESCRIPTION   = 'CrossFil Python script to map FASTQ files then sort, quality filter and mark duplicate BAM output'
+PICARD_TAG    = 'mdwm'
+CLEAN_TAG     = 'f3_F4_q1'
+
+util.init_app('cf') # Redefine variables from cross_fil_util.py
 
 ALIGNERS = ('bbmap', 'bwa', 'bt2')
 ALIGNER_BBMAP, ALIGNER_BWA, ALIGNER_BT2 = ALIGNERS

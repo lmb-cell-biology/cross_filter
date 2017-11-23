@@ -13,6 +13,8 @@ PROG_NAME   = 'cross_fil_background'
 DESCRIPTION = 'CrossFil Python script to make a single background VCF file for combined strains/samples which may then be subtracted from any individual sample using cross_fil_subtract'
 DEFAULT_MIN_NUM_OBS = 3
 
+util.init_app('cf') # Redefine variables from cross_fil_util.py
+
 def cross_fil_background(strain_vcf_files, out_vcf_path=None, min_num_obs=3):
     
   for file_path in strain_vcf_files:

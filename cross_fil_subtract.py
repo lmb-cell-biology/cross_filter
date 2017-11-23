@@ -11,6 +11,8 @@ OUTPUT_TAG  = '_subt_'
 DEFAULT_INTERVAL_LENGTH = 2000
 DEFAULT_GENOME_VERSION = 'WBcel235.86'
 
+util.init_app('cf') # Redefine variables from cross_fil_util.py
+
 def subtract_background(strain_vcf_path, background_vcf_path, genome_fasta_path,
                         out_dir, genome_version, interval_length, output_tag):
   

@@ -8,6 +8,8 @@ import cross_fil_util as util
 PROG_NAME   = 'cross_fil_genotype'
 DESCRIPTION = 'CrossFil Python script to generate genotype VCF files'
 
+util.init_app('cf') # Redefine variables from cross_fil_util.py
+
 # Below should be available in util.EXE
 CALLER_FREEBAYES = 'freebayes'
 CALLER_GATK      = 'gatk'
