@@ -3,7 +3,11 @@
 import os
 current_path = os.path.realpath(__file__)
 current_path = os.path.dirname(current_path) + '/cell_bio_util'
-import cross_fil_util as util
+import cell_bio_util as util
+import cross_fil_exe as exe
+
+for name in exe.EXE:
+  util.check_exe(EXE[name])
 
 PROG_NAME   = 'cross_fil_genotype'
 DESCRIPTION = 'CrossFil Python script to generate genotype VCF files'
