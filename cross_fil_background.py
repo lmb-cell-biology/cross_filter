@@ -5,13 +5,15 @@
 #!/usr/bin/python
 
 import os
+import sys
 current_path = os.path.realpath(__file__)
 current_path = os.path.dirname(current_path) + '/cell_bio_util'
+sys.path.append(current_path)
 import cell_bio_util as util
 import cross_fil_exe as exe
 
 for name in exe.EXE:
-  util.check_exe(EXE[name])
+  util.check_exe(exe.EXE[name])
 
 PROG_NAME   = 'cross_fil_background'
 DESCRIPTION = 'CrossFil Python script to make a single background VCF file for combined strains/samples which may then be subtracted from any individual sample using cross_fil_subtract'

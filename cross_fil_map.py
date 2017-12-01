@@ -4,13 +4,15 @@ import csv
 import os
 import shutil
 import uuid
+import sys
 current_path = os.path.realpath(__file__)
 current_path = os.path.dirname(current_path) + '/cell_bio_util'
+sys.path.append(current_path)
 import cell_bio_util as util
 import cross_fil_exe as exe
 
 for name in exe.EXE:
-  util.check_exe(EXE[name])
+  util.check_exe(exe.EXE[name])
 
 PROG_NAME     = 'cross_fil_map'
 DESCRIPTION   = 'CrossFil Python script to map FASTQ files then sort, quality filter and mark duplicate BAM output'
