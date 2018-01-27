@@ -17,7 +17,7 @@ DESCRIPTION = 'CrossFil Python script to generate genotype VCF files'
 
 util.init_app('cf') # Redefine variables from cross_fil_util.py
 
-# Below should be available in util.EXE
+# Below should be available in exe.EXE
 CALLER_FREEBAYES = 'freebayes'
 CALLER_GATK      = 'gatk'
 
@@ -40,7 +40,7 @@ def gatk_haplotype_job(bam_file_path, genome_fasta_path, sub_dir_name):
   
   util.info('Creating GVCF file for %s using GATK' % file_root)
 
-  cmd_args = list(util.JAVA) + ['-jar', util.EXE[CALLER_GATK],
+  cmd_args = list(util.JAVA) + ['-jar', exe.EXE[CALLER_GATK],
                                 '-T', 'HaplotypeCaller',
                                 '-R', genome_fasta_path,
                                 '-I', bam_file_path,
@@ -90,7 +90,7 @@ def gatk_merge_vcfs(dir_name, strain_vcf_paths, genome_fasta_path, num_cpu=util.
 
   merge_file_path = _get_merged_vcf_path(dir_name, strain_vcf_paths.keys(), CALLER_GATK)
 
-  cmd_args = list(util.JAVA) + ['-jar', util.EXE[CALLER_GATK],
+  cmd_args = list(util.JAVA) + ['-jar', exe.EXE[CALLER_GATK],
                                 '-T', 'GenotypeGVCFs',
                                 '-R', genome_fasta_path,
                                 #'-nt', str(min(8, num_cpu)), # Seems to fail with multiple CPU threads...
@@ -113,7 +113,7 @@ def gatk_select_homozygous_vars(strain_name, merged_vcf_path, genome_fasta_path,
  
   util.info('Creating VCF file for %s' % strain_name)
 
-  cmd_args = list(util.JAVA) + ['-jar', util.EXE[CALLER_GATK],
+  cmd_args = list(util.JAVA) + ['-jar', exe.EXE[CALLER_GATK],
                                '-T', 'SelectVariants',
                                '-R', genome_fasta_path,
                                '-V', merged_vcf_path,
@@ -133,12 +133,12 @@ def call_genotype_gatk(strain_bam_paths, genome_fasta_path, num_cpu, out_dir, su
   
   if not os.path.exists(genome_index_file):
     util.info('Making index for genome FASTA file %s' % genome_fasta_path)
-    cmd_args = [util.EXE['samtools'], 'faidx', genome_fasta_path]
+    cmd_args = [exe.EXE['samtools'], 'faidx', genome_fasta_path]
     util.call(cmd_args) 
 
   if not os.path.exists(genome_dict_file):
     util.info('Making dict filr for genome FASTA file %s' % genome_fasta_path)
-    cmd_args = [util.EXE['samtools'], 'dict', genome_fasta_path, '-o', genome_dict_file]
+    cmd_args = [exe.EXE['samtools'], 'dict', genome_fasta_path, '-o', genome_dict_file]
     util.call(cmd_args) 
   
   strains = sorted(strain_bam_paths)
@@ -162,7 +162,7 @@ def freebayes_genotype_job(region, genome_fasta_path, bam_paths):
   
   if not os.path.exists(out_vcf_path):
  
-    cmd_args = [util.EXE['freebayes'],
+    cmd_args = [exe.EXE['freebayes'],
                 '--no-mnps', # make this optional
                 '--no-complex', # make this optional
                 '-f', genome_fasta_path,
@@ -229,7 +229,7 @@ def call_genotype_freebayes(strain_bam_paths, genome_fasta_path, num_cpu, out_di
           write(line)
   
   out_file_obj.close()
-  cmd_args = [util.EXE['vcfuniq']]
+  cmd_args = [exe.EXE['vcfuniq']]
   util.call(cmd_args, stdin=temp_file_path_a, stdout=merge_file_path)
   
   # Cleanup temp files

@@ -41,7 +41,7 @@ def genome_map(aligner, strain_name, strain_num, fastq_paths, genome_index_path,
  
     if aligner == ALIGNER_BWA:
       rg_header = "@RG\\tID:%s\\tSM:sample_%s\\tPL:illumina\\tLB:lib%d\\tPU:unit%d" % (strain_name, strain_name, strain_num, strain_num)
-      cmd_args = [util.EXE[ALIGNER_BWA], 'mem',
+      cmd_args = [exe.EXE[ALIGNER_BWA], 'mem',
                   '-t', str(num_cpu),
                   '-M',
                   '-R', rg_header,
@@ -49,7 +49,7 @@ def genome_map(aligner, strain_name, strain_num, fastq_paths, genome_index_path,
       util.call(cmd_args, stdout=open(sam_file_path, 'w'))
    
     elif aligner == ALIGNER_BT2:
-      cmd_args = [util.EXE[ALIGNER_BT2], '--sensitive', 
+      cmd_args = [exe.EXE[ALIGNER_BT2], '--sensitive', 
                   '-x', genome_index_path,
                   '-p', str(num_cpu),
                   '-q', # FASTQ input
@@ -65,7 +65,7 @@ def genome_map(aligner, strain_name, strain_num, fastq_paths, genome_index_path,
       util.call(cmd_args)
       
     else: # bbmap
-      cmd_args = [util.EXE[ALIGNER_BBMAP],
+      cmd_args = [exe.EXE[ALIGNER_BBMAP],
                   'ref=%s' % genome_index_path,
                   'sam=1.3',
                   'in=%s' % fastq_paths[0],
@@ -105,7 +105,7 @@ def sam_cleanup(sam_file_path, num_cpu=2):
    
   util.info("Converting SAM file from genome aligner output into sorted BAM...")
   
-  cmd_args = [util.EXE['samtools'], 'sort',
+  cmd_args = [exe.EXE['samtools'], 'sort',
               '-O', 'bam',
  #             '-@', str(num_cpu),
               '-o', bam_file_path,
@@ -124,7 +124,7 @@ def sam_cleanup(sam_file_path, num_cpu=2):
   os.chdir('/') # Picard picky about relative paths
  
   cmd_args = list(util.JAVA)
-  cmd_args += ['-jar', util.EXE['picard'],
+  cmd_args += ['-jar', exe.EXE['picard'],
                'MarkDuplicatesWithMateCigar',
                'I=%s' % clean_bam_path,
                'O=%s' % out_bam_path,
@@ -135,7 +135,7 @@ def sam_cleanup(sam_file_path, num_cpu=2):
   os.chdir(cwd)
  
   util.info("Indexing %s" % out_bam_path)
-  util.call([util.EXE['samtools'],'index', out_bam_path])  
+  util.call([exe.EXE['samtools'],'index', out_bam_path])  
 
   util.info('Done BAM clean-up for strain %s' % strain_name)
   
@@ -159,7 +159,7 @@ def bedtools_coverage(bam_file_path, genome_fasta_path, exon_gff_file_path):
     util.info("Coverage file %s already exists. Skipping coverage calculations" % (R_cvr_file_path,))
     return
   
-  bedtools_exe = util.EXE['bedtools']
+  bedtools_exe = exe.EXE['bedtools']
     
   util.info("Running bedtools genomecov...")
   
@@ -197,7 +197,7 @@ def bedtools_coverage(bam_file_path, genome_fasta_path, exon_gff_file_path):
 
   util.info("Running R to compute mean genome coverage and mean exon coverage..")
   
-  cmd_args = ['Rscript', '--vanilla', util.EXE['mgcr'],
+  cmd_args = ['Rscript', '--vanilla', exe.EXE['mgcr'],
               genome_cvr_file_path, exon_cvr_temp_file_path]
   util.call(cmd_args, stdout=R_cvr_file_path)   
 

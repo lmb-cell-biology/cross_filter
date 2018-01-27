@@ -43,7 +43,7 @@ def subtract_background(strain_vcf_path, background_vcf_path, genome_fasta_path,
   snpeff_summ_path = path_root + '_summary.html'
   snpsift_tab_path = path_root + '_SnpSift.tabular'
 
-  cmd_args = list(util.JAVA) + ['-jar', util.EXE['gatk'],
+  cmd_args = list(util.JAVA) + ['-jar', exe.EXE['gatk'],
                                 '-T', 'SelectVariants',
                                 '-R', genome_fasta_path,
                                 '-V', strain_vcf_path,
@@ -57,7 +57,7 @@ def subtract_background(strain_vcf_path, background_vcf_path, genome_fasta_path,
 
   # Run SnpEff on resulting VCF file
 
-  cmd_args = list(util.JAVA) + ['-jar', util.EXE['snpeff'], '-v',
+  cmd_args = list(util.JAVA) + ['-jar', exe.EXE['snpeff'], '-v',
                                 '-upDownStreamLen', str(interval_length),
                                 '-stats', snpeff_summ_path,
                                 genome_version,
@@ -69,7 +69,7 @@ def subtract_background(strain_vcf_path, background_vcf_path, genome_fasta_path,
  
   util.info('Running SnpSift on %s' % snpeff_vcf_path)
 
-  cmd_args =  list(util.JAVA) + ['-jar', util.EXE['snpsift'],
+  cmd_args =  list(util.JAVA) + ['-jar', exe.EXE['snpsift'],
                                  'extractFields', snpeff_vcf_path,
                                  '-s', ',',
                                  '-e', '.',

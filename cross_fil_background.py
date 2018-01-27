@@ -43,13 +43,13 @@ def cross_fil_background(strain_vcf_files, out_vcf_path=None, min_num_obs=3):
   # vcfcombine: Combine multiple VCF files together, handling samples when alternate allele descriptions are identical
   # vcfintersect -u any better?
    
-  cmd_args = [util.EXE['vcfcombine']]
+  cmd_args = [exe.EXE['vcfcombine']]
   cmd_args += strain_vcf_files
   util.call(cmd_args, stdout=temp_comb_vcf_path)
   
   # Check chromosome sorting 
   
-  cmd_args = [util.EXE['vcfstreamsort'], '-a']
+  cmd_args = [exe.EXE['vcfstreamsort'], '-a']
   util.call(cmd_args, stdin=temp_comb_vcf_path, stdout=comb_vcf_path)
   
   os.unlink(temp_comb_vcf_path)
