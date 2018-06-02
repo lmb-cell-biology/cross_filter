@@ -26,7 +26,7 @@ ALIGNER_BBMAP, ALIGNER_BWA, ALIGNER_BT2 = ALIGNERS
 DEFAULT_ALIGNER = ALIGNER_BT2
 OTHER_ALIGNERS = [ALIGNER_BBMAP, ALIGNER_BWA]
 
-def genome_map(aligner, strain_name, strain_num, fastq_paths, genome_index_path, num_cpu=util.MAX_CORES):  
+def genome_map(aligner, strain_name, strain_num, fastq_paths, genome_index_path, genome_fasta_path, num_cpu=util.MAX_CORES):  
   
   dir_name, base_name = os.path.split(fastq_paths[0])
   
@@ -45,7 +45,8 @@ def genome_map(aligner, strain_name, strain_num, fastq_paths, genome_index_path,
                   '-t', str(num_cpu),
                   '-M',
                   '-R', rg_header,
-                  genome_index_path] + list(fastq_paths)
+                  #genome_index_path] + list(fastq_paths)
+                  genome_fasta_path] + list(fastq_paths)
       util.call(cmd_args, stdout=open(sam_file_path, 'w'))
    
     elif aligner == ALIGNER_BT2:
@@ -66,7 +67,8 @@ def genome_map(aligner, strain_name, strain_num, fastq_paths, genome_index_path,
       
     else: # bbmap
       cmd_args = [exe.EXE[ALIGNER_BBMAP],
-                  'ref=%s' % genome_index_path,
+                  'ref=%s' % genome_fasta_path,
+                  'path=%s' % genome_index_path,
                   'sam=1.3',
                   'in=%s' % fastq_paths[0],
                   'out=%s' % sam_file_path,
@@ -163,7 +165,8 @@ def bedtools_coverage(bam_file_path, genome_fasta_path, exon_gff_file_path):
     
   util.info("Running bedtools genomecov...")
   
-  cmd_args = [bedtools_exe, 'genomecov', '-ibam', bam_file_path, '-g', genome_fasta_path]              
+#  cmd_args = [bedtools_exe, 'genomecov', '-ibam', bam_file_path, '-g', genome_fasta_path]  
+  cmd_args = [bedtools_exe, 'genomecov', '-pc', '-ibam', bam_file_path]
   util.call(cmd_args, stdout=genome_cvr_file_path)  
                      
   util.info("Done... Results saved in: %s" % genome_cvr_file_path)
@@ -178,13 +181,15 @@ def bedtools_coverage(bam_file_path, genome_fasta_path, exon_gff_file_path):
   cmd_args = [bedtools_exe, 'bamtobed', '-i', bam_file_path]
   util.call(cmd_args, stdout=temp_bed_file1)   
              
-  cmd_args = [bedtools_exe, 'sort', '-i', temp_bed_file1]
+#  cmd_args = [bedtools_exe, 'sort', '-i', temp_bed_file1]
+  cmd_args = ['sort', '-k1,1', '-k2,2n', '--batch-size=5', temp_bed_file1] # Update to reduce RAM usage
   util.call(cmd_args, stdout=temp_bed_file2)              
   
   util.info("Done... Results saved in temporary directory: %s" % temp_dir)
   util.info("Running bedtools coverage...")
   
-  cmd_args = [bedtools_exe, 'coverage', '-hist' ,'-a', exon_gff_file_path,'-b', temp_bed_file2]
+#  cmd_args = [bedtools_exe, 'coverage', '-hist' ,'-a', exon_gff_file_path,'-b', temp_bed_file2]
+  cmd_args = [bedtools_exe, 'coverage', '-sorted','-hist' ,'-a', exon_gff_file_path,'-b', temp_bed_file2] # Update to reduce RAM usage
   util.call(cmd_args, stdout=exon_cvr_file_path)   
   
   util.info("Done... Results saved in: %s" % exon_cvr_file_path)
@@ -202,11 +207,11 @@ def bedtools_coverage(bam_file_path, genome_fasta_path, exon_gff_file_path):
   util.call(cmd_args, stdout=R_cvr_file_path)   
 
   util.info("Delete temporary directory and files...")
-  shutil.rmtree(temp_dir)   
+  #shutil.rmtree(temp_dir)   
 
      
 def cross_fil_map(barcode_csv, genome_fasta_path, exon_gff_path, fastq_paths_r1,
-                  fastq_paths_r2=None, out_top_dir=None,  aligner=ALIGNER_BWA, bowtie2_index=None,
+                  fastq_paths_r2=None, out_top_dir=None,  aligner=ALIGNER_BWA, bowtie2_index=None,bbmap_index=None,
                   num_cpu=util.MAX_CORES, sub_dir_name=None, file_ext=None):
   
   if not sub_dir_name:
@@ -251,6 +256,7 @@ def cross_fil_map(barcode_csv, genome_fasta_path, exon_gff_path, fastq_paths_r1,
       barcode_samples[sample_name] = barcode_name
       sample_barcodes[barcode_name] = (seq_run_id, sample_name)
   
+
   # Make subdirs
   for sample_name in barcode_samples:
     dir_name = os.path.join(out_top_dir, sub_dir_name, sample_name)
@@ -313,12 +319,14 @@ def cross_fil_map(barcode_csv, genome_fasta_path, exon_gff_path, fastq_paths_r1,
   # Genome alignment/mapping
   if aligner == ALIGNER_BT2:
     genome_index = bowtie2_index
+  elif aligner == ALIGNER_BBMAP:
+    genome_index = bbmap_index
   else:
-    genome_index = genome_fasta_path
+    genome_index = None
   
   sam_paths = []
   for i, strain_name in enumerate(strain_fastq_paths):
-    sam_path = genome_map(aligner, strain_name, i+1, strain_fastq_paths[strain_name], genome_index, num_cpu)
+    sam_path = genome_map(aligner=aligner, strain_name=strain_name, strain_num=i+1, fastq_paths=strain_fastq_paths[strain_name], genome_index_path=genome_index, genome_fasta_path=genome_fasta_path, num_cpu=num_cpu)
     sam_paths.append(sam_path)  
   
   # Parallel BAM cleanup
@@ -363,6 +371,9 @@ if __name__ == '__main__':
   arg_parse.add_argument('-bt2_index', metavar='BOWTIE2_GENOME_INDEX', default=None,
                          help='File path of genome index files for Bowtie2 without any file extension (.1.bt2 etc.)') 
 
+  arg_parse.add_argument('-bbmap_index', metavar='BBMAP_GENOME_INDEX', default=None,
+                         help='File path of ref/ folder where genome index files for BBMap are stored. Note that this file path should not include the ref/ folder itself (e.g.: path/to/index/)') 
+
   arg_parse.add_argument('-outdir', metavar='DIR_NAME', default=None,
                          help='Name of directory for output files and sub-directories (need not exist). Defaults to where first FASTQ file is located') 
 
@@ -390,6 +401,7 @@ if __name__ == '__main__':
   fastq_paths   = args['fastq_paths']
   genome_fasta  = args['genome_fasta']
   bowtie2_index = args['bt2_index']
+  bbmap_index   = args['bbmap_index']
   exon_gff_path = args['exon_gff_path']
   aligner       = args['al']
   pair_tags     = args['pe']
@@ -413,6 +425,8 @@ if __name__ == '__main__':
   else:
     if bowtie2_index:
       aligner = ALIGNER_BT2
+    elif bbmap_index:
+      aligner = ALIGNER_BBMAP
     else:
       aligner = ALIGNER_BWA
   
@@ -433,4 +447,4 @@ if __name__ == '__main__':
     fastq_paths_r1, fastq_paths_r2 = util.pair_fastq_files(fastq_paths, pair_tags)
      
   cross_fil_map(barcode_csv, genome_fasta, exon_gff_path, fastq_paths_r1, fastq_paths_r2,
-                out_top_dir, aligner, bowtie2_index, num_cpu)
+                out_top_dir, aligner, bowtie2_index, bbmap_index, num_cpu)

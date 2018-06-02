@@ -163,8 +163,8 @@ def freebayes_genotype_job(region, genome_fasta_path, bam_paths):
   if not os.path.exists(out_vcf_path):
  
     cmd_args = [exe.EXE['freebayes'],
-                '--no-mnps', # make this optional
-                '--no-complex', # make this optional
+                # '--no-mnps', # make this optional
+                # '--no-complex', # make this optional
                 '-f', genome_fasta_path,
                 '-r', region,
                 '-v', out_vcf_path] #, '--ploidy', '2']
@@ -179,66 +179,70 @@ def freebayes_genotype_job(region, genome_fasta_path, bam_paths):
 def call_genotype_freebayes(strain_bam_paths, genome_fasta_path, num_cpu, out_dir, sub_dir_name):
   # FreeBayes pipeline
   
-  
   strain_names, bam_file_paths = zip(*list(strain_bam_paths.items()))
   
   merge_file_path = _get_merged_vcf_path(out_dir, bam_file_paths, CALLER_FREEBAYES)
-  temp_file_path_a = util.get_temp_path(merge_file_path)
-  temp_file_path_b = util.get_temp_path(merge_file_path)
+  
+  if os.path.exists(merge_file_path):
+    util.info("%s exists and won't be overwritten. Skipping..." % merge_file_path)
+  
+  else:
+    temp_file_path_a = util.get_temp_path(merge_file_path)
+    temp_file_path_b = util.get_temp_path(merge_file_path)
 
-  # Make regions for parallelisation, splitting all chromos according to number of CPUs
-  
-  chromo_sizes = util.get_bam_chromo_sizes(bam_file_paths[0])
-      
-  regions = []
-  region_fmt = '%s:%d-%d'
-  
-  for chromo, size in chromo_sizes:
-    step = int(size/num_cpu) + 1 # will be rounded up
-    
-    i = 0
-    j = step
-    
-    while j < size:
-      regions.append(region_fmt % (chromo, i, j))
-      i = j
-      j += step
-    
-    regions.append(region_fmt % (chromo, i, size))
-  
-  # Call haplotype for all strains at once, split into parallel regions
-  
-  common_args = [genome_fasta_path, bam_file_paths]
-  region_vcf_paths = util.parallel_split_job(freebayes_genotype_job, regions, common_args,
-                                             num_cpu, collect_output=True)
-  
-  # Combine the regions which were run in parallel
-  
-  util.info('Combining freebayes regions')
-  out_file_obj = open(temp_file_path_a, 'w')
-  write = out_file_obj.write
-  
-  for i, region_vcf in enumerate(region_vcf_paths):
-    with open(region_vcf) as file_obj:
-      for line in file_obj:
-        if line[0] == '#':
-          if i == 0:
-            write(line)
+    # Make regions for parallelisation, splitting all chromos according to number of CPUs
+
+    chromo_sizes = util.get_bam_chromo_sizes(bam_file_paths[0])
         
-        else:
-          write(line)
-  
-  out_file_obj.close()
-  cmd_args = [exe.EXE['vcfuniq']]
-  util.call(cmd_args, stdin=temp_file_path_a, stdout=merge_file_path)
-  
-  # Cleanup temp files
-  
-  os.unlink(temp_file_path_a)
+    regions = []
+    region_fmt = '%s:%d-%d'
 
-  for file_path in region_vcf_paths:
-    os.unlink(file_path)
- 
+    for chromo, size in chromo_sizes:
+      step = int(size/num_cpu) + 1 # will be rounded up
+      
+      i = 0
+      j = step
+      
+      while j < size:
+        regions.append(region_fmt % (chromo, i, j))
+        i = j
+        j += step
+      
+      regions.append(region_fmt % (chromo, i, size))
+
+    # Call haplotype for all strains at once, split into parallel regions
+
+    common_args = [genome_fasta_path, bam_file_paths]
+    region_vcf_paths = util.parallel_split_job(freebayes_genotype_job, regions, common_args,
+                                               num_cpu, collect_output=True)
+
+    # Combine the regions which were run in parallel
+
+    util.info('Combining freebayes regions')
+    out_file_obj = open(temp_file_path_a, 'w')
+    write = out_file_obj.write
+
+    for i, region_vcf in enumerate(region_vcf_paths):
+      with open(region_vcf) as file_obj:
+        for line in file_obj:
+          if line[0] == '#':
+            if i == 0:
+              write(line)
+          
+          else:
+            write(line)
+
+    out_file_obj.close()
+    cmd_args = [exe.EXE['vcfuniq']]
+    util.call(cmd_args, stdin=temp_file_path_a, stdout=merge_file_path)
+
+    # Cleanup temp files
+
+    os.unlink(temp_file_path_a)
+
+    for file_path in region_vcf_paths:
+      os.unlink(file_path)
+      
   return merge_file_path
 
 

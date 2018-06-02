@@ -4,7 +4,7 @@ import os
 
 VCF_LIB_DIR = '/home/tjs23/apps/freebayes/vcflib/bin/'
        
-EXE = {#'bbmap'     :'bbmap',
+EXE = {'bbmap'         :'bbmap.sh',
        'bwa'           :'bwa',
        'bt2'           :'bowtie2',
        'bedtools'      :'bedtools',
@@ -20,6 +20,7 @@ EXE = {#'bbmap'     :'bbmap',
        'snpeff'        :os.environ["SnpEff"],
        'snpsift'       :os.environ["SnpSift"],
        'mgcr'          :os.environ["meanGenomeCoverage"],
+       'phc'           :os.environ["plot_heatmap_coverage"]
        }
 
 
