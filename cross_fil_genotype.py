@@ -30,11 +30,12 @@ def gatk_haplotype_job(bam_file_path, genome_fasta_path, sub_dir_name):
   dir_name, file_root = os.path.split(path_root)
   
   vcf_dir_name = os.path.join(dir_name, sub_dir_name)
-  vcf_file_path  = os.path.join(vcf_dir_name, '%s_hap.vcf' % (file_root))
+  # vcf_file_path  = os.path.join(vcf_dir_name, '%s_hap.vcf' % (file_root))
+  gvcf_file_path  = os.path.join(vcf_dir_name, '%s_hap.g.vcf' % (file_root))
     
-  if os.path.exists(vcf_file_path):
-    util.info("VCF file %s already exists. Skipping haplotype calling for %s" % (vcf_file_path, file_root))
-    return vcf_file_path
+  if os.path.exists(gvcf_file_path):
+    util.info("VCF file %s already exists. Skipping haplotype calling for %s" % (gvcf_file_path, file_root))
+    return gvcf_file_path
   
   util.makedirs(vcf_dir_name, exist_ok=True)
   
@@ -44,13 +45,13 @@ def gatk_haplotype_job(bam_file_path, genome_fasta_path, sub_dir_name):
                                 '-T', 'HaplotypeCaller',
                                 '-R', genome_fasta_path,
                                 '-I', bam_file_path,
-                                '-o', vcf_file_path,
+                                '-o', gvcf_file_path,
                                 '-ERC', 'GVCF',
-                                '-variant_index_type', 'LINEAR',
-                                '-variant_index_parameter', '128000']
+                                '-variant_index_type', 'LINEAR',             # Deprecated for GATK 4.0
+                                '-variant_index_parameter', '128000']        # Deprecated for GATK 4.0
   util.call(cmd_args)
   
-  return vcf_file_path
+  return gvcf_file_path
 
 
 def _get_merged_vcf_path(dir_name, strain_names, tag):
