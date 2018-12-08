@@ -90,22 +90,26 @@ def _get_merged_vcf_path(dir_name, strain_names, tag):
 def gatk_merge_vcfs(dir_name, strain_vcf_paths, genome_fasta_path, num_cpu=util.MAX_CORES):
 
   merge_file_path = _get_merged_vcf_path(dir_name, strain_vcf_paths.keys(), CALLER_GATK)
-
-  cmd_args = list(util.JAVA) + ['-jar', exe.EXE[CALLER_GATK],
-                                '-T', 'GenotypeGVCFs',
-                                '-R', genome_fasta_path,
-                                #'-nt', str(min(8, num_cpu)), # Seems to fail with multiple CPU threads...
-                                '-o', merge_file_path]
-
-  for strain in strain_vcf_paths:
-    cmd_args += ['-V', strain_vcf_paths[strain]]
   
-  util.call(cmd_args)
+  if os.path.exists(merge_file_path):
+    util.info( '%s already exists and won\'t be overwritten...' % merge_file_path)
+  
+  else:
+    cmd_args = list(util.JAVA) + ['-jar', exe.EXE[CALLER_GATK],
+                                  '-T', 'GenotypeGVCFs',
+                                  '-R', genome_fasta_path,
+                                  #'-nt', str(min(8, num_cpu)), # Seems to fail with multiple CPU threads...
+                                  '-o', merge_file_path]
+
+    for strain in strain_vcf_paths:
+      cmd_args += ['-V', strain_vcf_paths[strain]]
+    
+    util.call(cmd_args)
 
   return merge_file_path
 
 
-def gatk_select_homozygous_vars(strain_name, merged_vcf_path, genome_fasta_path, file_tag='extracted'):
+def gatk_select_vars(strain_name, merged_vcf_path, genome_fasta_path, file_tag='extracted',homozygous=True):
 
   dir_name, file_name = os.path.split(merged_vcf_path)
   
@@ -119,12 +123,18 @@ def gatk_select_homozygous_vars(strain_name, merged_vcf_path, genome_fasta_path,
                                '-R', genome_fasta_path,
                                '-V', merged_vcf_path,
                                '-o', out_vcf_path,
-                               '-sn', 'sample_%s' % strain_name,
-                               '-select', "vc.getGenotype('sample_%s').isHomVar()" % strain_name] # Check quotes
+                               '-sn', 'sample_%s' % strain_name]
+                               
+  if homozygous:
+    cmd_args += ['-select', "vc.getGenotype('sample_%s').isHomVar()" % strain_name] # Check quotes
+  
+  else:
+    # cmd_args += ['-select', "! vc.getGenotype('sample_%s').isHomRef()" % strain_name] 
+    cmd_args += ['-select', "vc.getGenotype('sample_%s').isHomVar() || vc.getGenotype('sample_%s').isHet() && ! vc.getGenotype('sample_%s').isHomRef()" % (strain_name,strain_name,strain_name)]
 
   util.call(cmd_args)
   util.info('All done for strain %s. VCF file can be found in %s' % (strain_name, out_vcf_path))
-  
+
 
 def call_genotype_gatk(strain_bam_paths, genome_fasta_path, num_cpu, out_dir, sub_dir_name):
   # GATK pipeline - parallelise strains in python
@@ -226,12 +236,16 @@ def call_genotype_freebayes(strain_bam_paths, genome_fasta_path, num_cpu, out_di
     for i, region_vcf in enumerate(region_vcf_paths):
       with open(region_vcf) as file_obj:
         for line in file_obj:
-          if line[0] == '#':
-            if i == 0:
+          if '\n' in line:
+            if line[0] == '#':
+              if i == 0:
+                write(line)
+            
+            else:
               write(line)
-          
+              
           else:
-            write(line)
+            util.critical('No end of line in %s. Exiting...' % region_vcf)
 
     out_file_obj.close()
     cmd_args = [exe.EXE['vcfuniq']]
@@ -248,7 +262,7 @@ def call_genotype_freebayes(strain_bam_paths, genome_fasta_path, num_cpu, out_di
 
 
 def cross_fil_genotype(bam_file_paths, genome_fasta_path, var_caller=CALLER_FREEBAYES,
-                       num_cpu=util.MAX_CORES, out_dir=None, sub_dir_name=None):
+                       num_cpu=util.MAX_CORES, out_dir=None, sub_dir_name=None,homozygous=True):
   
   import subprocess
   
@@ -290,11 +304,15 @@ def cross_fil_genotype(bam_file_paths, genome_fasta_path, var_caller=CALLER_FREE
     merged_vcf_path = call_genotype_freebayes(strain_bam_paths, genome_fasta_path, num_cpu, out_dir, sub_dir_name)
   
   
-  # Select homozygous variants for each strain from combined genotype VCF file - parallelise strains in python
-  
-  file_tag = 'homozy_%s' % var_caller
-  common_args = [merged_vcf_path, genome_fasta_path, file_tag]
-  util.parallel_split_job(gatk_select_homozygous_vars, strain_names, common_args, num_cpu)
+  # Select variants for each strain from combined genotype VCF file - parallelise strains in python
+  # Only homozygous
+  if homozygous:
+    file_tag = 'homozy_%s' % var_caller
+  # All variants detected per strain
+  else:
+    file_tag = 'extracted_%s' % var_caller
+  common_args = [merged_vcf_path, genome_fasta_path, file_tag, homozygous]
+  util.parallel_split_job(gatk_select_vars, strain_names, common_args, num_cpu)
     
   util.info('%s finished for %d input strains' % (PROG_NAME, num_strains))  
 
@@ -325,12 +343,15 @@ if __name__ == '__main__':
   
   arg_parse.add_argument('-vc', metavar='CALLER_NAME', default=None,
                          help='Name of the program to perform variant calling: Default: %s Other options: %s' % (default_var_caller, other_var_callers)) 
-
+    
   arg_parse.add_argument('-outdir', metavar='DIR_NAME', default=None,
                          help='Optional name of directory for output VCF files. Default is current working directory') 
 
   arg_parse.add_argument('-cpu', metavar='NUM_CORES', default=util.MAX_CORES, type=int,
                          help='Number of parallel CPU cores to use. Default: All available (%d)' % util.MAX_CORES) 
+  
+  arg_parse.add_argument('-heterozygous', default=False, action='store_true',
+                         help='Specify whether to select both homozygous and heterozygous variants. By default it will only select homozygous.') 
 
   arg_parse.add_argument('-q', default=False, action='store_true',
                          help='Sets quiet mode to supress on-screen reporting.')
@@ -340,11 +361,12 @@ if __name__ == '__main__':
   
   args = vars(arg_parse.parse_args())
 
-  genome_fasta   = args['genome_fasta']
-  bam_file_paths = args['bam_paths']
-  num_cpu        = args['cpu'] or None # May not be zero
-  out_dir        = args['outdir']
-  var_caller     = args['vc']
+  genome_fasta     = args['genome_fasta']
+  bam_file_paths   = args['bam_paths']
+  num_cpu          = args['cpu'] or None # May not be zero
+  out_dir          = args['outdir']
+  var_caller       = args['vc']
+  homozygous       = not args['heterozygous']
 
   # Reporting handled by cross_fil_util
   util.QUIET   = args['q']
@@ -363,4 +385,5 @@ if __name__ == '__main__':
   if out_dir and not os.path.exists(out_dir):
     util.critical('Output directory "%s" does not exist' % out_dir)  
   
-  cross_fil_genotype(bam_file_paths, genome_fasta, var_caller, num_cpu, out_dir)
+  
+  cross_fil_genotype(bam_file_paths, genome_fasta, var_caller, num_cpu, out_dir, homozygous=homozygous)

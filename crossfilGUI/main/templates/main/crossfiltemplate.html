@@ -1,0 +1,57 @@
+<html>
+   
+   <head>
+      <style>
+      body {background-color: powderblue;}
+      div  {border: 1px solid black;
+            background-color: white;
+            }
+      div h1{text-align: center;
+             margin-top: -10px;
+             height: 20px;
+             line-height: 20px;
+             font-size: 15px;
+             }
+      div h1 span{background-color:white;}
+      </style>
+
+      <title>Cross Filter</title>
+   </head>
+   
+   <body>
+   
+      <h1>Welcome to Cross Filter!</h1>
+      
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+       
+        <div>
+           <h1><span>Data Files</span></h1>
+             {{ form.csv.label }} {{ form.csv }} <br>
+             {% for field in form %}
+               {% if field.name|slice:"0:3" == "upl" %}
+                 {{ field.label }}{{ field }}<br>
+               {% endif %}
+             {% endfor %}
+             <input type="submit" name="addfq" value="Add fastq">
+             <input type="submit", name="reset" value="Reset form">
+             <input type="hidden", name="num_files", value="{{ num_files }}">
+             <br>
+             <br>
+           
+        </div>
+        <br>
+        <div>
+          <h1><span>Genome Build</span></h1>
+          {{ form.genome_build.label }} {{ form.genome_build }} <br>
+        </div>
+        <br>
+        <div>
+          <h1><span>Output Options<span></h1>
+        </div>
+        
+        
+      </form>
+      
+   </body>
+</html>

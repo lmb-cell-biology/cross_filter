@@ -79,7 +79,13 @@ def cross_fil_background(strain_vcf_files, out_vcf_path=None, min_num_obs=3):
       else:
         data = line.split()      
         genotypes = data[9:]
-        num_obs = num_samples - genotypes.count('.')
+        if ref_allele is None:
+          num_obs = num_samples - genotypes.count('.')
+        else:
+          genotypes2 = []
+          for r in range(len(ref_allele)):
+            genotypes2 = genotypes2 + [ref_allele[r] in x for x in genotypes]
+          num_obs = num_samples - genotypes2.count(True)
         
         if num_obs >= min_num_obs:
           write(line)      
@@ -108,6 +114,9 @@ if __name__ == '__main__':
   arg_parse.add_argument('-m', metavar='MIN_VAR_COUNT', default=DEFAULT_MIN_NUM_OBS, type=int,
                          help='Minimum number of variant occurrences (in input strains) required for acceptance into background file. Default: %d' % DEFAULT_MIN_NUM_OBS) 
   
+  arg_parse.add_argument('-ref_allele', nargs='+', metavar='REFERENCE_ALLELE', default=None,
+                         help='How is genotype labeled for reference allele. Default: \'.\'') 
+  
   arg_parse.add_argument('-q', default=False, action='store_true',
                          help='Sets quiet mode to supress on-screen reporting.')
   
@@ -119,6 +128,7 @@ if __name__ == '__main__':
   vcf_paths = args['vcf_paths']
   out_path  = args['o']
   min_num_obs = args['m']
+  ref_allele  = args['ref_allele']
 
   # Reporting handled by cross_fil_util
   util.QUIET   = args['q']
