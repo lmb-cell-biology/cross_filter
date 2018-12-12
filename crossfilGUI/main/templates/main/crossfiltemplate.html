@@ -37,20 +37,48 @@
              <input type="submit", name="reset" value="Reset form">
              <input type="hidden", name="num_files", value="{{ num_files }}">
              <br>
-             <br>
            
         </div>
         <br>
         <div>
           <h1><span>Genome Build</span></h1>
-          {{ form.genome_build.label }} {{ form.genome_build }} <br>
+          {{ form.genome_fasta.label }} {{ form.genome_fasta }} <br>
+          {{ form.genome_gff3.label }} {{ form.genome_gff3 }} <br>
+        </div>
+        <br>
+        <div>
+          <h1><span>Data Info<span></h1>
+            {{ form.aligner.label }} {{ form.aligner }} <br>
+            {{ form.bt2_index.label }} {{ form.bt2_index }} <br>
+            {{ form.bbmap_index.label }} {{ form.bbmap_index }} <br>
+            {{ form.pe.label }} {{ form.pe }} &nbsp; {{ form.pe_tags.label }} {{ form.pe_tags }} <br>
+            {{ form.variant_caller.label }} {{ form.variant_caller }}
+        </div>
+        <br>
+        <div>
+          <h1><span>SnpEff Options<span></h1>
+            {{ form.snpeff_gv.label }} {{ form.snpeff_gv }} <br>
+            {{ form.snpeff_ivl.label }} {{ form.snpeff_ivl }} <br>
+        </div>
+        <br>
+        <div>
+          <h1><span>Remove Background Variants<span></h1>
+            {{ form.min_var_count.label }} {{ form.min_var_count }} <br>
+            {{ form.ref_allele.label }} {{ form.ref_allele }} <br>
+        </div>
+        <br>
+        <div>
+          <h1><span>Pipeline Options<span></h1>
+          {{ form.q.label }} {{ form.q }} <br>
+          {{ form.cpu.label }} {{ form.cpu }} <br>
         </div>
         <br>
         <div>
           <h1><span>Output Options<span></h1>
-        </div>
-        
-        
+          {{ form.outdir.label }} {{ form.outdir }} <br>
+          {{ form.heterozygous.label }} {{ form.heterozygous }} <br>
+          <br>
+          {{ form.log.label }} {{ form.log }} <br>
       </form>
       
    </body>

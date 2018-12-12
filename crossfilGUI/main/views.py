@@ -18,7 +18,8 @@ def set_crossfil_page(request, num_files=1):
     elif 'reset' in form_dict:
       num_files = 1
     
-    form = LoadForm(num_files, request.POST, request.FILES)
+    form = LoadForm(num_files, request.POST , request.FILES)
+
     
   else:
     form = LoadForm(num_files)
