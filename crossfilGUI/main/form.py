@@ -1,4 +1,8 @@
 from django import forms
+
+class FileFieldForm(forms.Form):
+    file_field = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))
+    
   
 class LoadForm(forms.Form):
   csv = forms.FileField(required=False,label="Upload CSV")
@@ -7,7 +11,9 @@ class LoadForm(forms.Form):
     forms.Form.__init__(self, *args, **kw)
   
     for i in range(num_files):
-      self.fields['upload_fastq%d' % (i+1)] = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),required=False)
+#      self.fields['upload_fastq%d' % (i+1)] = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),required=False)
+      self.fields['upload_fastq%d' % (i+1)] = FileFieldForm()
+
       
   
   genome_fasta = forms.FileField(required=False)
